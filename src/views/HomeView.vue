@@ -1,39 +1,26 @@
 <script setup lang="ts">
 import PokemonCard from '@/components/PokemonCard.vue'
 import SpinnerLoader from '@/components/SpinnerLoader.vue'
-import type { Pokemon } from '@/models/pokemon.model'
-import { onMounted, ref } from 'vue'
+import { onMounted } from 'vue'
+import { usePokemonStore } from '@/stores/usePokemonStore'
 
-const pokemons = ref<Pokemon[]>([])
-const isLoading = ref(false)
+const pokemonStore = usePokemonStore()
 
-onMounted(() => {
-  isLoading.value = true
-  fetch('https://tyradex.vercel.app/api/v1/pokemon')
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok')
-      }
-      return response.json()
-    })
-    .then((data) => {
-      pokemons.value = data
-    })
-    .catch((error) => {
-      console.error('There has been a problem with your fetch operation:', error)
-    })
-    .finally(() => {
-      isLoading.value = false
-    })
+onMounted(async () => {
+  await pokemonStore.fetchPokemons()
 })
 </script>
 
 <template>
   <div class="home">
     <h1>Pokédex</h1>
-    <SpinnerLoader v-if="isLoading" />
+    <SpinnerLoader v-if="pokemonStore.pokemonsRequestState === 'loading'" />
     <div v-else class="pokemon-list">
-      <PokemonCard v-for="pokemon in pokemons" :key="pokemon.pokedex_id" :pokemon="pokemon" />
+      <PokemonCard
+        v-for="pokemon in pokemonStore.pokemons"
+        :key="pokemon.pokedex_id"
+        :pokemon="pokemon"
+      />
     </div>
   </div>
 </template>
